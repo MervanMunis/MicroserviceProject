@@ -1,0 +1,49 @@
+version: '3'
+services:
+  serviceregistry:
+    image: 'microservice/serviceregistry:latest'
+    container_name: serviceregistry
+    ports:
+      - '8761:8761'
+  configserver:
+    image: 'microservice/configserver:latest'
+    container_name: configserver
+    ports:
+      - '9296:9296'
+    depends_on:
+      - serviceregistry
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://configserver:9296/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  cloudgateway:
+    image: 'microservice/cloudgateway:latest'
+    container_name: cloudgateway
+    ports:
+      - '9090:9090'
+    depends_on:
+      configserver:
+        condition: service_healthy
+  productservice:
+    image: 'microservice/productservice'
+    container_name: productservice
+    ports:
+      - '8080'
+    depends_on:
+      - configserver
+  paymentservice:
+    image: 'microservice/paymentservice'
+    container_name: paymentservice
+    ports:
+      - '8081'
+    depends_on:
+      - configserver
+  orderservice:
+    image: 'microservice/orderservice'
+    container_name: orderservice
+    ports:
+      - '8082'
+    depends_on:
+      - configserver
+
